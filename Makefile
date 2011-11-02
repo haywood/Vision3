@@ -2,14 +2,14 @@
 # Comments begin with a # (like this line)
 
 # Your UNI
-UNI = abc1234
+UNI = mhr2126
 
 # VARIOUS VARIABLES (you will need to change some of these)
 # The compiler. If you're writing code using c++, change gcc to g++
 CC = g++
 
 # Compile time flags. If you want to compile with debugging turned off, remove the -g
-CFLAGS = -g
+CFLAGS = -g3 -Wall -Wextra -pedantic
 
 # Libraries to link against. You should only need to link against the math library (-lm).
 LFLAGS = -lm
@@ -49,8 +49,8 @@ test3: p3
 
 # 'make test4' tests only program 4
 test4: p4
-	./p4 directions.txt sphere1.pgm sphere2.pgm sphere3.pgm sphere4.pgm sphere5.pgm sphere_mask.pgm sphere_normal.ppm sphere_albedo.pgm
-	./p4 directions.txt vase1.pgm vase2.pgm vase3.pgm vase4.pgm vase5.pgm vase_mask.pgm vase_normal.ppm vase_albedo.pgm
+	./p4 directions.txt sphere1.pgm sphere2.pgm sphere3.pgm sphere4.pgm sphere5.pgm sphere_mask.pgm sphere_normal.ppm sphere_albedo.pgm sphere_gradient.dat
+	./p4 directions.txt vase1.pgm vase2.pgm vase3.pgm vase4.pgm vase5.pgm vase_mask.pgm vase_normal.ppm vase_albedo.pgm vase_gradient.dat
 
 # 'make test5' tests only program 5
 test5: p5

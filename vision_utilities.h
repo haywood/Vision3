@@ -2,6 +2,9 @@
 #include <sys/time.h>
 
 
+#ifndef VISION_UTIL_H_
+#define VISION_UTIL_H_
+
 #define CLAMP(A,L,H)       ((A)<=(L) ? (L) : (A)<=(H) ? (A) : (H))
 #define MAX(A,B)   ((A) > (B) ? (A) : (B))
 #define MIN(A,B)   ((A) < (B) ? (A) : (B))
@@ -157,3 +160,5 @@ int writeImageColor(const ImageColor *im, const char *fname);
  *  NO WARRANTIES: use at your own risk
  */
 int line(Image *im, int y0, int x0, int y1, int x1, int color);
+
+#endif /* VISION_UTIL_H_ */
