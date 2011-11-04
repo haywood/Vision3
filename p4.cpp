@@ -27,6 +27,8 @@ bool zero_at(int img) { return 0 == getPixel(_images+img, _i, _j); }
 int map_normal(float x) { return 255*(1.0f + x)/2; }
 
 void matrix_inverse(float M[DIM][DIM], float M_inv[DIM][DIM]);
+void matrix_transpose(float M[DIM][DIM], float M_T[DIM][DIM]);
+void naive_product(float A[DIM][DIM], float B[DIM][DIM], float C[DIM][DIM]);
 
 int main(int argc, char *argv[])
 {
@@ -57,11 +59,11 @@ int main(int argc, char *argv[])
 
     direction_file.close();
 
-    vector<int>::iterator first_zero;
     readImage(&mask, argv[7]);
     int rows = getNRows(&mask), cols = getNCols(&mask), k;
-    float x, y, z, magnitude, albedo_max = 0.0f, *albedo_store=(float *)calloc(sizeof(float), rows*cols),
-          S[DIM][DIM], I[DIM], M[DIM], S_inv[DIM][DIM];
+    float x, y, z, magnitude, albedo_max = 0.0f, *albedo_store=(float *)calloc(sizeof(float), rows*cols);
+    float S[DIM][DIM], I[DIM], M[DIM], S_T[DIM][DIM], A[DIM][DIM], A_inv[DIM][DIM], S_inv[DIM][DIM];
+    float p, q, f, g;
     Gradient *gradients=(Gradient *)calloc(sizeof(Gradient), rows*cols);
     
     if (setSizeColor(&normals, rows, cols) == -1) {
@@ -84,7 +86,10 @@ int main(int argc, char *argv[])
                     I[i] = getPixel(_images+k, _i, _j);
                 }
 
-                matrix_inverse(S, S_inv);
+                matrix_transpose(S, S_T);
+                naive_product(S_T, S, A);
+                matrix_inverse(A, A_inv);
+                naive_product(A_inv, S_T, S_inv);
                 magnitude = 0;
 
                 for (int i = 0; i < DIM; ++i) {
@@ -103,12 +108,21 @@ int main(int argc, char *argv[])
                 y = map_normal(M[1]);
                 z = map_normal(M[2]);
 
-                if (magnitude > albedo_max) albedo_max = magnitude;
-
                 setPixelColor(&normals, _i, _j, x, y, z);
+
+                if (magnitude > albedo_max) albedo_max = magnitude;
                 albedo_store[_i*cols + _j] = magnitude;
-                gradients[_i*cols + _j].p = M[0];
-                gradients[_i*cols + _j].q = M[1];
+
+                p = M[0]/M[2];
+                q = M[1]/M[2];
+
+                magnitude = sqrt(1 + pow(p, 2) + pow(q, 2));
+
+                f = p/(1 + magnitude);
+                g = q/(1 + magnitude);
+
+                gradients[_i*cols + _j].p = f;
+                gradients[_i*cols + _j].q = g;
 
             } else {
                 setPixelColor(&normals, _i, _j, 0, 0, 255);
@@ -197,5 +211,26 @@ void matrix_inverse(float M[DIM][DIM], float M_inv[DIM][DIM])
             i++;
         }
         j++;
+    }
+}
+
+void matrix_transpose(float M[DIM][DIM], float M_T[DIM][DIM])
+{
+    for (int i = 0; i < DIM; ++i) {
+        for (int j = 0; j < DIM; ++j) {
+            M_T[i][j] = M[j][i];
+        }
+    }
+}
+
+void naive_product(float A[DIM][DIM], float B[DIM][DIM], float C[DIM][DIM])
+{
+    for (int i = 0; i < DIM; ++i) {
+        for (int j = 0; j < DIM; ++j) {
+            C[i][j] = 0.0f;
+            for (int k = 0; k < DIM; ++k) {
+                C[i][j] += A[i][k]*B[k][j];
+            }
+        }
     }
 }

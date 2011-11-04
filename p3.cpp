@@ -7,6 +7,7 @@
 #include <cstdlib>
 
 #define NUM_IMG 5
+#define MIN 3
 
 using namespace std;
 
@@ -26,16 +27,17 @@ int main(int argc, char *argv[])
     }
 
     char * output_file = argv[NUM_IMG+1];
-    int rows = getNRows(images), cols = getNCols(images);
+    int rows = getNRows(images), cols = getNCols(images), count;
     setSize(&mask, rows, cols);
 
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
-            setPixel(&mask, i, j, 0);
-            for (int k = 0; k < NUM_IMG && !getPixel(&mask, i, j); ++k) {
+            count = 0;
+            for (int k = 0; k < NUM_IMG && count < MIN; ++k) {
                 if (getPixel(images+k, i, j))
-                    setPixel(&mask, i, j, 1);
+                    count++;
             }
+            setPixel(&mask, i, j, count >= MIN ? 1 : 0);
         }
     }
     setColors(&mask, 1);
