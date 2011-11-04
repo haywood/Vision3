@@ -26,9 +26,9 @@ bool zero_at(int img) { return 0 == getPixel(_images+img, _i, _j); }
 
 int map_normal(float x) { return 255*(1.0f + x)/2; }
 
-void matrix_inverse(float M[DIM][DIM], float M_inv[DIM][DIM]);
-void matrix_transpose(float M[DIM][DIM], float M_T[DIM][DIM]);
-void naive_product(float A[DIM][DIM], float B[DIM][DIM], float C[DIM][DIM]);
+void matrix_inverse(float **M, float **M_inv, int n);
+void matrix_transpose(float **M, float **M_T, int n, int m);
+void naive_product(float **A, float **B, float **C, int n, int m, int p);
 
 int main(int argc, char *argv[])
 {
@@ -60,9 +60,9 @@ int main(int argc, char *argv[])
     direction_file.close();
 
     readImage(&mask, argv[7]);
-    int rows = getNRows(&mask), cols = getNCols(&mask), k;
+    int rows = getNRows(&mask), cols = getNCols(&mask), k, nonzero, N;
     float x, y, z, magnitude, albedo_max = 0.0f, *albedo_store=(float *)calloc(sizeof(float), rows*cols);
-    float S[DIM][DIM], I[DIM], M[DIM], S_T[DIM][DIM], A[DIM][DIM], A_inv[DIM][DIM], S_inv[DIM][DIM];
+    float **S, *I, M[DIM], **S_T, **A, **A_inv, **S_inv;
     float p, q, f, g;
     Gradient *gradients=(Gradient *)calloc(sizeof(Gradient), rows*cols);
     
@@ -80,16 +80,41 @@ int main(int argc, char *argv[])
         for (_j = 0; _j < cols; ++_j) {
             sort(image_indices.begin(), image_indices.end(), intensity_at);
             if (getPixel(&mask, _i, _j)) {
+                nonzero = 1;
+                N = 0;
+                for (int i = 0; i < NUM_IMG && nonzero; ++i) {
+                    k = image_indices[i];
+                    if (getPixel(_images+k, _i, _j)) N++;
+                    else nonzero = 0;
+                }
+
+                S = (float **)malloc(N*sizeof(float *));
+                I = (float *)malloc(N*sizeof(float));
+
+                S_T = (float **)malloc(DIM*sizeof(float *));
+                for (int i = 0; i < DIM; ++i)
+                    S_T[i] = (float *)malloc(N*sizeof(float));
+
+                A = (float **)malloc(DIM*sizeof(float *));
+                A_inv = (float **)malloc(DIM*sizeof(float *));
+                S_inv = (float **)malloc(DIM*sizeof(float *));
                 for (int i = 0; i < DIM; ++i) {
+                    A[i] = (float *)malloc(DIM*sizeof(float));
+                    A_inv[i] = (float *)malloc(DIM*sizeof(float));
+                    S_inv[i] = (float *)malloc(N*sizeof(float));
+                }
+
+                for (int i = 0; i < N; ++i) {
+                    S[i] = (float *)malloc(DIM*sizeof(float));
                     k = image_indices[i];
                     memcpy(S[i], directions[k], sizeof(directions[k]));
                     I[i] = getPixel(_images+k, _i, _j);
                 }
 
-                matrix_transpose(S, S_T);
-                naive_product(S_T, S, A);
-                matrix_inverse(A, A_inv);
-                naive_product(A_inv, S_T, S_inv);
+                matrix_transpose(S, S_T, N, DIM);
+                naive_product(S_T, S, A, DIM, N, DIM);
+                matrix_inverse(A, A_inv, DIM);
+                naive_product(A_inv, S_T, S_inv, DIM, DIM, N);
                 magnitude = 0;
 
                 for (int i = 0; i < DIM; ++i) {
@@ -123,6 +148,28 @@ int main(int argc, char *argv[])
 
                 gradients[_i*cols + _j].p = f;
                 gradients[_i*cols + _j].q = g;
+
+                for (int i = 0; i < N; ++i)
+                    free(S[i]);
+                free(S);
+                
+                free(I);
+
+                for (int i = 0; i < DIM; ++i)
+                    free(A[i]);
+                free(A);
+
+                for (int i = 0; i < DIM; ++i)
+                    free(S_T[i]);
+                free(S_T);
+
+                for (int i = 0; i < DIM; ++i)
+                    free(A_inv[i]);
+                free(A_inv);
+
+                for (int i = 0; i < DIM; ++i)
+                    free(S_inv[i]);
+                free(S_inv);
 
             } else {
                 setPixelColor(&normals, _i, _j, 0, 0, 255);
@@ -167,19 +214,19 @@ int main(int argc, char *argv[])
     return was_error;
 }
 
-void matrix_inverse(float M[DIM][DIM], float M_inv[DIM][DIM])
+void matrix_inverse(float **M, float **M_inv, int n)
 {
     int i, j, k, l, row_max;
-    float m, tmp_row[DIM];
+    float m, *tmp_row =(float *)malloc(n*sizeof(float));
     for (i = 0; i < DIM; ++i) {
         for (j = 0; j < DIM; ++j) {
             M_inv[i][j] = i == j ? 1.0 : 0.0;
         }
     }
     i = j = 0;
-    while (i < DIM && j < DIM) {
+    while (i < n && j < n) {
         row_max = i;
-        for (k = i+1; k < DIM; ++k) {
+        for (k = i+1; k < n; ++k) {
             if (fabs(M[k][j]) > fabs(M[row_max][j])) {
                 row_max = k;
             }
@@ -195,11 +242,11 @@ void matrix_inverse(float M[DIM][DIM], float M_inv[DIM][DIM])
                 memcpy(M[i], tmp_row, sizeof(tmp_row));
             }
             m = M[i][j];
-            for (k = 0; k < DIM; ++k) {
+            for (k = 0; k < n; ++k) {
                 M_inv[i][k] /= m;
                 M[i][k] /= m;
             }
-            for (k = 0; k < DIM; ++k) {
+            for (k = 0; k < n; ++k) {
                 if (k != i) {
                     m = M[k][j];
                     for (l = 0; l < DIM; ++l) {
@@ -212,23 +259,25 @@ void matrix_inverse(float M[DIM][DIM], float M_inv[DIM][DIM])
         }
         j++;
     }
+    free(tmp_row);
 }
 
-void matrix_transpose(float M[DIM][DIM], float M_T[DIM][DIM])
+void matrix_transpose(float **M, float **M_T, int n, int m)
 {
-    for (int i = 0; i < DIM; ++i) {
-        for (int j = 0; j < DIM; ++j) {
+    for (int i = 0; i < m; ++i) {
+        for (int j = 0; j < n; ++j) {
             M_T[i][j] = M[j][i];
         }
     }
 }
 
-void naive_product(float A[DIM][DIM], float B[DIM][DIM], float C[DIM][DIM])
+void naive_product(float **A, float **B, float **C, int n, int m, int p)
 {
-    for (int i = 0; i < DIM; ++i) {
-        for (int j = 0; j < DIM; ++j) {
+
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < p; ++j) {
             C[i][j] = 0.0f;
-            for (int k = 0; k < DIM; ++k) {
+            for (int k = 0; k < m; ++k) {
                 C[i][j] += A[i][k]*B[k][j];
             }
         }
