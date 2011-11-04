@@ -33,9 +33,8 @@ int main(int argc, char *argv[])
         for (int j = 0; j < cols; ++j) {
             setPixel(&mask, i, j, 0);
             for (int k = 0; k < NUM_IMG && !getPixel(&mask, i, j); ++k) {
-                if (getPixel(images+k, i, j)) {
+                if (getPixel(images+k, i, j))
                     setPixel(&mask, i, j, 1);
-                }
             }
         }
     }

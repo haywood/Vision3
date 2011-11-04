@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
         y -= y0;
         z = -sqrt(pow(radius, 2) - (pow(x, 2) + pow(y, 2)));
         scale = -(float)max_intensity/radius;
-        directions_file << scale*x << " " << scale*y << " " << scale*z;
+        directions_file << -scale*x << " " << -scale*y << " " << scale*z;
         if (l+1 < NUM_IMG) directions_file << "\n";
 
         free(image.data);
