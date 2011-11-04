@@ -118,8 +118,8 @@ int main(int argc, char *argv[])
 
                 magnitude = sqrt(1 + pow(p, 2) + pow(q, 2));
 
-                f = p/(1 + magnitude);
-                g = q/(1 + magnitude);
+                f = 2*p/(1 + magnitude);
+                g = 2*q/(1 + magnitude);
 
                 gradients[_i*cols + _j].p = f;
                 gradients[_i*cols + _j].q = g;
