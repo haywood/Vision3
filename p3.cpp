@@ -7,7 +7,7 @@
 #include <cstdlib>
 
 #define NUM_IMG 5
-#define MIN 3
+#define NUM_MIN 3
 
 using namespace std;
 
@@ -33,11 +33,11 @@ int main(int argc, char *argv[])
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
             count = 0;
-            for (int k = 0; k < NUM_IMG && count < MIN; ++k) {
+            for (int k = 0; k < NUM_IMG && count < NUM_MIN; ++k) {
                 if (getPixel(images+k, i, j))
                     count++;
             }
-            setPixel(&mask, i, j, count >= MIN ? 1 : 0);
+            setPixel(&mask, i, j, count >= NUM_MIN ? 1 : 0);
         }
     }
     setColors(&mask, 1);

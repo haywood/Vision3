@@ -27,7 +27,7 @@ P5SRC = p5.cpp
 # generated from running the 'test' target. If you generate any other files,
 # make sure this is correct. This list of files is deleted when 'make clean'
 # or 'make submit' are run (to prevent submitting all these files).
-OUTPUTS_TO_CLEAN = sphere.txt directions.txt sphere_mask.pgm vase_mask.pgm sphere_normal.ppm vase_normal.ppm sphere_albedo.pgm vase_albedo.pgm sphere_gradient.dat vase_gradient.dat
+OUTPUTS_TO_CLEAN = sphere.txt directions.txt sphere_mask.pgm vase_mask.pgm sphere_normal.ppm vase_normal.ppm sphere_albedo.pgm vase_albedo.pgm sphere_gradient.dat vase_gradient.dat vase_depth.pgm sphere_depth.pgm
 
 # THE BUILD RULES (you shouldn't need to edit any of these)
 # 'make test' builds all 5 programs and then tests them.

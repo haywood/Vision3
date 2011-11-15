@@ -3,11 +3,16 @@ Michael Reed
 mhr2126
 
 p1
-
+    Calculates center and radius of the sphere, then stores them in a file.
 p2
+    Calculates the orientation of each light source given the position of the sphere. The formula for calculating the z component of the normal at a point on the sphere is
+            
+                            z = sqrt(rho - (x^2 + y^2)), where rho is the radius of the sphere.
 
+    The above formula holds for all points on the sphere. The direction of the light source is then the negation of the vector recovered as the normal of the brightest point on the sphere, since it is lambertian.
 p3
-
+    Calculates a bitmask for each surface.
 p4
-
+    Calculate and store normals, gradient, and albedo.
 p5
+    Calculate shape from gradients.
